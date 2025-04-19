@@ -1,213 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ .Title }}</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-x..." crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    body {
+    html, body {
       margin: 0;
-      background: #0d0d0d;
-      font-family: sans-serif;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      background: #000;
+      color: white;
+    }
+
+    video.bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
       height: 100vh;
-      display: flex;
-      flex-direction: column;
+      object-fit: cover;
+      z-index: -1;
     }
 
-    .gif-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-.gif-container img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-#waveform {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100px;
-  pointer-events: none; /* so it doesn't block clicks */
-  opacity: 0.5;
-
-}
-
-    .controls {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 15px;
-      background: #111;
-      gap: 10px;
-    }
-
-    .left-controls {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .seek-bar {
-      flex: 1;
-      margin: 0 15px;
-      height: 8px;
-      appearance: none;
-      background: #333;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .seek-bar::-webkit-slider-thumb {
-      appearance: none;
-      width: 12px;
-      height: 12px;
-      background: #fff;
-      border-radius: 50%;
-    }
-
-    .volume-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .volume-bar {
+    .controls-container {
       position: absolute;
-      bottom: 125%;
-      left: -35px;
-      width: 100px;
-      display: none;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
 
-    .volume-wrapper:hover .volume-bar {
-      display: block;
-    }
-
-    .volume-bar input {
-      width: 100%;
-      appearance: none;
-      height: 6px;
-      background: #666;
-      border-radius: 4px;
-    }
-
-    .volume-bar input::-webkit-slider-thumb {
-      appearance: none;
-      width: 10px;
-      height: 10px;
-      background: #fff;
-      border-radius: 50%;
+    .track-info {
+      font-size: 18px;
+      font-weight: bold;
     }
 
     .icon-btn {
       background: none;
       border: none;
-      color: #fff;
+      color: white;
       font-size: 20px;
       cursor: pointer;
     }
 
     .icon-btn:hover {
-      color: #aaa;
+      color: #ccc;
+    }
+
+    .volume-slider {
+      width: 100px;
+    }
+
+    .logo-title {
+      position: absolute;
+      top: 20px;
+      left: 30px;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
     }
   </style>
-  <script src="https://unpkg.com/wavesurfer.js"></script>
-
 </head>
 <body>
+  <video autoplay muted loop playsinline class="bg-video">
+    <source src="{{ .VideoURL }}" type="video/mp4" />
+  </video>
 
-  <div class="gif-container">
-    <img src="{{ .GifURL }}" alt="chill gif" />
-    <div id="waveform"></div>
+  <div class="logo-title">{{ .Title }}</div>
+
+  <div class="controls-container">
+    <div class="track-info" id="trackTitle">Streaming...</div>
+
+    <button class="icon-btn" id="playPause"> ▶️ </button>
+
+    <input type="range" id="volume" class="volume-slider" min="0" max="1" step="0.01" value="1" />
   </div>
 
-  <audio id="audio" src="{{ .AudioURL }}"></audio>
-  <div id="waveform" style="width: 100%; height: 100px;"></div>
-
-  <div class="controls">
-    <div class="left-controls">
-      <button id="playPause" class="icon-btn">
-        <i id="playPauseIcon" class="fas fa-play"></i>
-      </button>
-
-      <div class="volume-wrapper">
-        <button class="icon-btn">
-          <i class="fas fa-volume-up"></i>
-        </button>
-        <div class="volume-bar">
-          <input type="range" id="volume" min="0" max="1" step="0.01" value="1">
-        </div>
-      </div>
-    </div>
-
-    <input type="range" id="seek" class="seek-bar" min="0" max="100" value="0">
-  </div>
+  <audio id="radio" autoplay>
+    <source src="{{ .AudioURL }}" type="audio/mpeg" />
+  </audio>
 
   <script>
-    const audio = document.getElementById('audio');
-    const seekBar = document.getElementById('seek');
-    const volumeBar = document.getElementById('volume');
+    const audio = document.getElementById('radio');
     const playPauseBtn = document.getElementById('playPause');
-    const playPauseIcon = document.getElementById('playPauseIcon');
+    const volumeSlider = document.getElementById('volume');
+    const trackTitle = document.getElementById('trackTitle');
 
     playPauseBtn.addEventListener('click', () => {
       if (audio.paused) {
         audio.play();
-        playPauseIcon.classList.remove('fa-play');
-        playPauseIcon.classList.add('fa-pause');
+        playPauseBtn.textContent = '⏸️';
       } else {
         audio.pause();
-        playPauseIcon.classList.remove('fa-pause');
-        playPauseIcon.classList.add('fa-play');
+        playPauseBtn.textContent = '▶️';
       }
     });
 
-    audio.addEventListener('play', () => {
-      playPauseIcon.classList.remove('fa-play');
-      playPauseIcon.classList.add('fa-pause');
-    });
-
-    audio.addEventListener('pause', () => {
-      playPauseIcon.classList.remove('fa-pause');
-      playPauseIcon.classList.add('fa-play');
-    });
-
-    audio.addEventListener('timeupdate', () => {
-      const percentage = (audio.currentTime / audio.duration) * 100;
-      seekBar.value = percentage || 0;
-    });
-
-    seekBar.addEventListener('input', (e) => {
-      const seekTo = (e.target.value / 100) * audio.duration;
-      audio.currentTime = seekTo;
-    });
-
-    volumeBar.addEventListener('input', (e) => {
+    volumeSlider.addEventListener('input', (e) => {
       audio.volume = e.target.value;
     });
 
-    const waveform = WaveSurfer.create({
-    container: '#waveform',
-    waveColor: '#666',
-    progressColor: '#fff',
-    height: 80,
-    barWidth: 2,
-    responsive: true,
-    backend: 'MediaElement',
-    mediaControls: false,
-    media: audio,
-  });
-
-  // Sync audio and waveform manually if needed
-  audio.addEventListener('play', () => waveform.play());
-  audio.addEventListener('pause', () => waveform.pause());
+    // Dummy track title updater - you can later replace this with real metadata
+    setInterval(() => {
+      trackTitle.textContent = "http://somafm.com - " + new Date().toLocaleTimeString();
+    }, 10);
   </script>
-
 </body>
 </html>

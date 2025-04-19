@@ -29,8 +29,8 @@ func radio(w http.ResponseWriter, r *http.Request) {
 
 	if err = tmpl.Execute(w, map[string]string{
 		"Title":    "Zen Radio",
-		"GifURL":   "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHlmZGY1NWQxbGN3YW16YmFldDBhZTNpNHdxYm9iZWp1ZHVqbGdocSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/CW16nFVXLSQxSMUEMd/giphy.gif",
-		"AudioURL": "/static/audio/chill-audio-1.mp3", // or a stream URL
+		"VideoURL": "/static/video/bg-video-1.mp4",
+		"AudioURL": "https://ice3.somafm.com/groovesalad-128-mp3", // or a stream URL
 	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
